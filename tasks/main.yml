@@ -1,0 +1,55 @@
+- name: install apt pkgs
+  apt:
+    pkg: "{{ item }}"
+    update_cache: yes
+  with_items:
+    - python-pip
+    - apache2
+    - libapache2-mod-wsgi
+    - python-dev
+
+
+- name: install Django particular version
+  pip:
+    name: django
+    version: 1.6.8
+
+- name: install pip stuff
+  pip:
+    name: "{{ item }}"
+  with_items:
+    - httplib2.ca_certs_locater
+    - djangosaml2
+
+- lineinfile:
+    dest: /usr/local/lib/python2.7/dist-packages/django/contrib/auth/models.py
+    line: "class SiteProfileNotAvailable(Exception): pass"
+
+- file:
+    path: "{{ django_saml_app_root }}"
+    state: directory
+
+- command: django-admin startproject "{{ django_saml_app_name }}"  chdir="{{ django_saml_app_root }}" creates="{{ django_saml_app_path }}/manage.py"
+
+- django_manage:
+    app_path: "{{ django_saml_app_path }}"
+    command: migrate
+
+- template:
+    dest: "/etc/apache2/sites-available/{{ django_saml_app_name }}.conf"
+    src: samldemo.conf
+
+- template:
+    dest: "/etc/apache2/sites-available/{{ django_saml_app_name }}.conf"
+    src: samldemo.conf
+
+
+- command: a2dissite 000-default.conf
+  notify: restart apache
+
+- command: a2ensite {{ django_saml_app_name }}.conf
+  notify: restart apache
+
+- debug:
+    msg: "visit http://{{ ansible_fqdn }}"
+

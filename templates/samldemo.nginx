@@ -1,0 +1,25 @@
+upstream {{ django_saml_app_name }} {
+  server 127.0.0.1:8000;
+}
+
+server {
+  listen 80;
+  server_name {{ ansible_fqdn }};
+  charset     utf-8;
+  client_max_body_size 75M;   # adjust to taste
+
+  # Django media
+  #location /media  {
+  #    alias {{ django_saml_app_name }}/media;
+  #}
+  #location /static  {
+  #    alias {{ django_saml_app_name }}/static;
+  #}
+
+  location / {
+      proxy_pass {{ django_saml_app_name }};
+  }
+}
+
+
+~

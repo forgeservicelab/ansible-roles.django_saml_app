@@ -1,0 +1,9 @@
+# run uWSGI Django app when a client connect to a socket
+
+uwsgi:
+  processes: 4
+  threads: 2
+  chdir: {{ django_saml_app_path }}
+  wgsi-file: {{ django_saml_app_name }}/wsgi.py
+  socket: "127.0.0.1:8088"
+

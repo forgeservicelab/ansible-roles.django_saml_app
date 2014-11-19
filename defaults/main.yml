@@ -1,0 +1,3 @@
+django_saml_app_name: samldemo
+django_saml_app_root: /var/www
+django_saml_app_path: "{{ django_saml_app_root }}/{{ django_saml_app_name }}"
