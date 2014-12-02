@@ -7,6 +7,7 @@
     - apache2
     - libapache2-mod-wsgi
     - python-dev
+    - xmlsec1
 
 
 - name: install Django particular version
@@ -21,28 +22,60 @@
     - httplib2.ca_certs_locater
     - djangosaml2
 
-- lineinfile:
-    dest: /usr/local/lib/python2.7/dist-packages/django/contrib/auth/models.py
-    line: "class SiteProfileNotAvailable(Exception): pass"
+#- lineinfile:
+#    dest: /usr/local/lib/python2.7/dist-packages/django/contrib/auth/models.py
+#    line: "class SiteProfileNotAvailable(Exception): pass"
 
 - file:
     path: "{{ django_saml_app_root }}"
     state: directory
 
-- command: django-admin startproject "{{ django_saml_app_name }}"  chdir="{{ django_saml_app_root }}" creates="{{ django_saml_app_path }}/manage.py"
+- command: django-admin.py startproject "{{ django_saml_app_name }}"  chdir="{{ django_saml_app_root }}" creates="{{ django_saml_app_path }}/manage.py"
+
+- name: Generate the private key for certificate request
+  shell: openssl genrsa -des3 -passout pass:password -out key.pass 1024 chdir={{ django_saml_app_path }} creates={{ django_saml_app_path }}/key.pass
+
+- name: Strip the passphrase from the key
+  shell: openssl rsa -in key.pass -passin pass:password -out key chdir={{ django_saml_app_path }} creates={{ django_saml_app_path }}/key
+
+# Change cert settings
+- name: Create and sign the the new certificate
+  shell: openssl req -new -x509 -subj '/C=FI/ST=Uusimaa/L=Espoo/O=Digile/CN={{ ansible_fqdn }}/' -days 3650 -key key -out cert.crt -extensions v3_ca chdir={{ django_saml_app_path }} creates={{ django_saml_app_path }}/cert.crt
+
+- name: get metadata xml from remote SimpleSamlPHP IdP
+  get_url:
+    url: "{{ django_saml_app_idp }}/saml2/idp/metadata.php"
+    dest: "{{ django_saml_app_path}}/remote_metadata.xml"
+
+- file:
+    path: "{{ django_saml_app_path}}"
+    recurse: yes
+    owner: www-data
 
 - django_manage:
     app_path: "{{ django_saml_app_path }}"
-    command: migrate
+    command: syncdb
+
+- template:
+    dest: "{{ django_saml_app_path }}/{{ django_saml_app_name }}/settings.py"
+    src: settings.py
 
 - template:
     dest: "/etc/apache2/sites-available/{{ django_saml_app_name }}.conf"
     src: samldemo.conf
 
-- template:
-    dest: "/etc/apache2/sites-available/{{ django_saml_app_name }}.conf"
-    src: samldemo.conf
+- copy:
+    dest: "{{ django_saml_app_path }}/{{ django_saml_app_name }}/urls.py"
+    src: urls.py
 
+- copy:
+    dest: "{{ django_saml_app_path }}/{{ django_saml_app_name }}/views.py"
+    src: views.py
+
+- file:
+    path: "{{ django_saml_app_path}}"
+    recurse: yes
+    owner: www-data
 
 - command: a2dissite 000-default.conf
   notify: restart apache

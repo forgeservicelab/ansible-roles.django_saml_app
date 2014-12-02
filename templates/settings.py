@@ -39,7 +39,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'app',
     'djangosaml2',
 )
 
@@ -48,7 +47,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
@@ -108,7 +107,7 @@ SAML_CONFIG = {
   'entityid': '{{ ansible_fqdn }}/saml2/metadata/',
 
   # directory with attribute mapping
-  'attribute_map_dir': os.path.join(BASE_DIR, 'attribute-maps'),
+  'attribute_map_dir': '/usr/local/lib/python2.7/dist-packages/saml2/attributemaps',
 
   # this block states what services we provide
   'service': {
@@ -165,8 +164,8 @@ SAML_CONFIG = {
   'debug': 1,
 
   # certificate
-  'key_file': os.path.join(BASE_DIR, 'mycert.key'),  # private part
-  'cert_file': os.path.join(BASE_DIR, 'mycert.pem'),  # public part
+  'key_file': os.path.join(BASE_DIR, 'key'),
+  'cert_file': os.path.join(BASE_DIR, 'cert.crt'),
 
   # own metadata settings
   'contact_person': [
@@ -192,7 +191,7 @@ SAML_CONFIG = {
 
 SAML_ATTRIBUTE_MAPPING = {
 # cn is in the OID notation urn:oid:2.5.4.3
-    'urn:oid:2.5.4.3': ('username', ),
+    'cn': ('username', ),
     'mail': ('email', ),
     'givenName': ('first_name', ),
     'sn': ('last_name', )
