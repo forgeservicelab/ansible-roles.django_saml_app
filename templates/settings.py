@@ -119,13 +119,13 @@ SAML_CONFIG = {
               # url and binding to the assetion consumer service view
               # do not change the binding or service name
               'assertion_consumer_service': [
-                  ('{{ ansible_fqdn }}/saml2/acs/',
+                  ('http://{{ ansible_fqdn }}/saml2/acs/',
                    saml2.BINDING_HTTP_POST),
                   ],
               # url and binding to the single logout service view
               # do not change the binding or service name
               'single_logout_service': [
-                  ('{{ ansible_fqdn }}/saml2/ls/',
+                  ('http://{{ ansible_fqdn }}/saml2/ls/',
                    saml2.BINDING_HTTP_REDIRECT),
                   ],
               },
